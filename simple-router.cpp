@@ -37,8 +37,15 @@ SimpleRouter::handlePacket(const Buffer& packet, const std::string& inIface)
 
   std::cerr << getRoutingTable() << std::endl;
 
-  // FILL THIS IN
+  /* Check validation of the raw Ethernet frame */
 
+  ethernet_hdr* eth_hdr = (ethernet_hdr*)packet.data();
+  // check the size of packet
+  if (packet.size() < sizeof(ethernet_hdr)){
+    std::cerr << "the size of packet is smaller than Ethernet header, ignoring" << std::endl;
+  }
+  // check destination hardware address
+  // check whether it is the corresponding mac address of the interface
 }
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
