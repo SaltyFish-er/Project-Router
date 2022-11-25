@@ -25,9 +25,19 @@ namespace simple_router {
 //////////////////////////////////////////////////////////////////////////
 // IMPLEMENT THIS METHOD
 void
+SimpleRouter::handleARP(const Buffer& packet, const std::string& inIface){
+
+}
+
+void
+SimpleRouter::handleIPv4(const Buffer& packet, const std::string& inIface){
+
+}
+void
 SimpleRouter::handlePacket(const Buffer& packet, const std::string& inIface)
 {
   std::cerr << "Got packet of size " << packet.size() << " on interface " << inIface << std::endl;
+  print_hdrs(packet)
 
   const Interface* iface = findIfaceByName(inIface);
   if (iface == nullptr) {
@@ -37,7 +47,7 @@ SimpleRouter::handlePacket(const Buffer& packet, const std::string& inIface)
 
   std::cerr << getRoutingTable() << std::endl;
 
-  /* Check validation of the raw Ethernet frame */
+  /* check validation of the raw Ethernet frame */
 
   ethernet_hdr* eth_hdr = (ethernet_hdr*)packet.data();
   // check the size of packet
@@ -45,8 +55,37 @@ SimpleRouter::handlePacket(const Buffer& packet, const std::string& inIface)
     std::cerr << "the size of packet is smaller than Ethernet header, ignoring" << std::endl;
   }
   // check destination hardware address
-  // check whether it is the corresponding mac address of the interface
+  
+  Buffer eth_dhost(eth_hdr -> ether_dhost, eth_hdr -> ether_shost - 1);
+  const Buffer BROADCAST_ADDR {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+  if (findIfaceByMac(eth_dhost)){
+    std::cout << "the destination address is corresponding to mac address, accepted" << std::endl;
+  }
+  else if (eth_dhost == BROADCAST_ADDR){
+    std::cout << "the destination address is broadcast address, accepted" << std::endl;
+  }
+  else{
+    std::cerr << "the destination address is not destinied to the router, ignoring" << std::endl;
+  }
+  
+  // check type of the Ethernet frame (ARP or IPv4 or others)
+  uint16_t eth_type = ethertype((uint8_t *)eth_hdr);
+  if (eth_type == ethertype_ip){
+    std::cout << "the type of the ethernet frame is IPv4, accepted" << std::endl;
+    handleIPv4(packet, inIface);
+  }
+  else if (eth_type == ethertype_arp){
+    std::cout << "the type of the ethernet frame is ARP, accepted" << std::endl;
+    handleARP(packet, inIface);
+  }
+  else{
+    std::cerr << "the type of the Ethernet frame is neither IPv4 nor ARP, ignoring" << std::endl;
+  }
 }
+
+void
+SimpleRouter::handlePacket(const Buffer& packet, const std::string& inIface)
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
