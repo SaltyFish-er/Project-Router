@@ -121,6 +121,7 @@ struct ethernet_hdr
 
 enum ip_protocol {
   ip_protocol_icmp = 0x0001,
+  ipv4_addr_len = 0x04
 };
 
 enum ethertype {
