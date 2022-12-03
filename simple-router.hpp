@@ -42,7 +42,35 @@ public:
    */
   void
   handlePacket(const Buffer& packet, const std::string& inIface);
-
+  
+  /* handle ARP packet */
+  void
+  handleARP(const Buffer& packet, const std::string& inIface);
+  void
+  handleARPRequest(const Buffer& packet, const std::string& inIface);
+  void
+  handleARPReply(const Buffer& packet, const std::string& inIface);
+  
+  /* handle IPv4 packet */
+  void
+  handleIPv4(const Buffer& packet, const std::string& inIface);
+  
+  /* handle ICMP packet */
+  handleICMP(const Buffer& packet, const std::string& inIface);
+  
+  /* forward IPv4 packet */
+  void
+  ForwardPacket(const Buffer& packet, const std::string& inIface);
+  
+  /* send ICMP packet */
+  void
+  sendIcmpType3(const Buffer& packet, const std::string& inIface, uint8_t type, uint8_t code);
+  void
+  sendIcmpPortUnreachable(const Buffer& packet, const std::string& inIface);
+  void
+  sendIcmpTimeExceeded(const Buffer& packet, const std::string& inIface);
+  void
+  sendEchoReply(const Buffer& packet, const std::string& inIface);
   /**
    * USE THIS METHOD TO SEND PACKETS
    *
