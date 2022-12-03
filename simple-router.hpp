@@ -51,6 +51,10 @@ public:
   void
   handleARPReply(const Buffer& packet, const std::string& inIface);
   
+  /* send ARP request */
+  void
+  sendARPRequest(uint32_t ip);
+
   /* handle IPv4 packet */
   void
   handleIPv4(const Buffer& packet, const std::string& inIface);
@@ -69,6 +73,8 @@ public:
   sendIcmpPortUnreachable(const Buffer& packet, const std::string& inIface);
   void
   sendIcmpTimeExceeded(const Buffer& packet, const std::string& inIface);
+  void
+  sendIcmpHostUnreachable(const Buffer& packet, const std::string& inIface);
   void
   sendEchoReply(const Buffer& packet, const std::string& inIface);
   /**

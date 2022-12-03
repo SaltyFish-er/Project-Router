@@ -32,7 +32,38 @@ ArpCache::periodicCheckArpRequestsAndCacheEntries()
 {
 
   // FILL THIS IN
+  std::cout << "periodic check ARP requests and Cache Entries" << std::endl;
 
+  /* check ARP requests */
+  for (auto iter = m_arpRequests.begin(); iter != m_arpRequests.end();){
+    time_point current_time = steady_clock::now();
+    std::shared_ptr<simple_router::ArpRequest> request = *iter;
+    if(request->nTimesSent == 5){
+      std::cout << "the request was sent to ip "<< request->ip <<" 5 times" << std::endl;
+      for (const auto& packet: request->packets){
+        m_router.sendIcmpHostUnreachable(packet.packet, packet.iface);
+      }
+      iter = m_arpRequests.erase(iter);
+    }
+    else{
+      std::cout << "the request was sent to ip " << request->ip << " " << request->nTimesSent << "times" << std::endl;
+      m_router.sendARPRequest(request->ip);
+      request->timeSent = current_time;
+      request->nTimesSent++;
+      iter++;
+    }
+  }
+  /* check Cache Entries */
+  std::vector<std::shared_ptr<ArpEntry>> invalid_entries;
+  for (auto iter = m_cacheEntries.begin(); iter!= m_cacheEntries.end();iter++){
+    if(!(*iter)->isValid){
+      invalid_entries.push_back(*iter);
+    }
+  }
+
+  for (auto entry : invalid_entries){
+    m_cacheEntries.remove(entry);
+  }
 }
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////

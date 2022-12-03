@@ -133,6 +133,37 @@ SimpleRouter::handleARP(const Buffer& packet, const std::string& inIface){
 }
 
 void
+SimpleRouter::sendARPRequest(uint32_t ip){
+  std::cout << "sending Arp Request now..." << std::endl;
+  
+  const RoutingTableEntry entry = m_routingTable.lookup(ip);
+  const Interface* outIface = findIfaceByName(entry.ifName);
+  
+  Buffer req(sizeof(ethernet_hdr) + sizeof(arp_hdr));
+  const Buffer BROADCAST_ADDR {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+  
+  /* fill in Ethernet header */
+  ethernet_hdr* eth_ptr = (ethernet_hdr*)req.data();
+  memcpy(eth_ptr->ether_dhost, BROADCAST_ADDR, ETHER_ADDR_LEN);
+  memcpy(eth_ptr->ether_shost,outIface->addr.data(), ETHER_ADDR_LEN);
+  eth_ptr->ether_type = htons(ethertype_arp);
+
+  /* fill in Arp header */
+  arp_hdr* arp_ptr = (arp_ptr)(req.data()+sizeof(ethernet_hdr));
+  arp_ptr->arp_hrd = htons(arp_hrd_ethernet);
+  arp_ptr->arp_pro = htons(ethertype_ip);
+  arp_ptr->arp_hln = 0x06;
+  arp_ptr->arp_pln = ipv4_addr_len;
+  arp_ptr->arp_op = htons(arp_op_request);
+  memcpy(arp_ptr->arp_sha, outIface->addr, ETHER_ADDR_LEN);
+  arp_ptr->arp_sip = outIface->ip;
+  memcpy(arp_ptr->arp_tha, BROADCAST_ADDR, ETHER_ADDR_LEN);
+  arp_ptr->arp_tip = ip;
+
+  sendPacket(req, outIface->name);
+}
+
+void
 SimpleRouter::sendIcmpType3(const Buffer& packet, const std::string& inIface, uint8_t type, uint8_t code){
   ethernet_hdr * eth_ptr = (ethernet_hdr *)packet.data();
   ip_hdr * ip_ptr = (ip_hdr *)(packet.data()+sizeof(ethernet_hdr));
@@ -182,6 +213,12 @@ void
 SimpleRouter::sendIcmpPortUnreachable(const Buffer& packet, const std::string& inIface){
   std::cout << "send Icmp Port Unreachable packet back..." << std::endl;
   sendIcmpType3(packet, inIface, 3, 3);
+}
+
+void
+SimpleRouter::sendIcmpHostUnreachable(const Buffer& packet, const std::string& inIface){
+  std::cout << "send Icmp Host Unreachable packet back..." << std::endl;
+  sendIcmpType3(packet, inIface, 3, 1);
 }
 
 void
