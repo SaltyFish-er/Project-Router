@@ -34,7 +34,24 @@ RoutingTable::lookup(uint32_t ip) const
 
   // FILL THIS IN
 
-  throw std::runtime_error("Routing entry not found");
+  const RoutingTableEntry* matched_entry = nullptr;
+  uint32_t matched_mask = 0;
+  for (const auto &entry : m_entries){
+    if(ip & entry.mask == entry.dest & entry.mask){
+      if(entry.mask >= matched_mask){
+        matched_mask = entry.mask;
+        matched_entry = &entry;
+      }
+    }
+  }
+
+  if (matched_entry != nullptr){
+    std::cout << "Routing table found ip: input = "<< ip <<" matched = "<< matched_entry->dest <<std::endl;
+    return *matched_entry;
+  }
+  else{
+    throw std::runtime_error("Routing entry not found");
+  }
 }
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
