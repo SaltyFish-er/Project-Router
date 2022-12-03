@@ -60,6 +60,7 @@ public:
   handleIPv4(const Buffer& packet, const std::string& inIface);
   
   /* handle ICMP packet */
+  void
   handleICMP(const Buffer& packet, const std::string& inIface);
   
   /* forward IPv4 packet */
