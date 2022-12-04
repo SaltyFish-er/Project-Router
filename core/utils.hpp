@@ -53,6 +53,7 @@ ipToString(const in_addr& address);
 void print_hdr_eth(const uint8_t* buf);
 void print_hdr_ip(const uint8_t* buf);
 void print_addr_ip_int(uint32_t ip);
+void print_addr_eth(const uint8_t* addr);
 void print_hdr_icmp(const uint8_t* buf);
 void print_hdr_arp(const uint8_t* buf);
 

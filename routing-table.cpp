@@ -46,10 +46,9 @@ RoutingTable::lookup(uint32_t ip) const
   }
 
   if (matched_entry != nullptr){
-    std::cout << "Routing table found ip: input = ";
-    print_addr_ip_int(ip);
-    std::cout <<" matched = "; 
-    print_addr_ip_int(matched_entry->dest);
+    std::cout << "Routing table found ip:";
+    print_addr_ip_int(ntohl(ip));
+    print_addr_ip_int(ntohl(matched_entry->dest));
     std::cout << std::endl;
     return *matched_entry;
   }

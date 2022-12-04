@@ -64,23 +64,27 @@ SimpleRouter::handleARPReply(const Buffer& packet, const std::string& inIface){
   arp_hdr * header_ptr = (arp_hdr *)(packet.data() + sizeof(ethernet_hdr));
   uint32_t s_ip = header_ptr->arp_sip;
   Buffer s_mac(header_ptr->arp_sha, header_ptr->arp_sha + 6);
-  std::cout << "IP: " << header_ptr->arp_sip << " MAC: " << header_ptr->arp_sha << std::endl;
-
+  std::cout << "source IP/MAC: " << std::endl;
+  print_addr_ip_int(ntohl(s_ip));
+  print_addr_eth(s_mac.data());
   // insert mac-ip to arp-cache
   if (m_arp.lookup(s_ip) == nullptr){
     auto arp_request = m_arp.insertArpEntry(s_mac, s_ip);
+    std::cout<<"Insert arp/ip to arp-cache successfully!"<<std::endl;
     // handle queued requests if exist
     if (arp_request != nullptr){
+      std::cout<<"Handle requests in arp_request..."<<std::endl;
       for (auto &req : arp_request->packets){
-        ethernet_hdr* ether_ptr = (ethernet_hdr *)req.packet.data();
-        memcpy(ether_ptr->ether_dhost, s_mac.data(), ETHER_ADDR_LEN);
-        sendPacket(req.packet, req.iface);
+        //ethernet_hdr* ether_ptr = (ethernet_hdr *)req.packet.data();
+        //memcpy(ether_ptr->ether_dhost, s_mac.data(), ETHER_ADDR_LEN);
+        handlePacket(req.packet, req.iface);
       }
+      std::cout<<"Handle requests over!"<<std::endl;
       m_arp.removeRequest(arp_request);
     }
   }
   else{
-    std::cout << "the mac-ip exists, ignoring" << std::endl;
+    std::cout << "The mac-ip exists, ignoring" << std::endl;
   }
 }
 
@@ -282,7 +286,10 @@ SimpleRouter::ForwardPacket(const Buffer& packet, const std::string& inIface){
   forward_ip_ptr->ip_ttl = forward_ip_ptr->ip_ttl - 1;
   forward_ip_ptr->ip_sum = 0;
   forward_ip_ptr->ip_sum = cksum((uint8_t*)forward_ip_ptr, sizeof(ip_hdr));
-  
+  std::cout<<"Forward port: "<< outIface->name << std::endl;;
+  std::cout<<"======Forward Packet as below======"<<std::endl;
+  print_hdrs(forward);
+  std::cout<<"======Forward Packet over======"<<std::endl;
   sendPacket(forward, outIface->name);
 }
 
