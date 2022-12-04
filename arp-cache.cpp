@@ -32,21 +32,25 @@ ArpCache::periodicCheckArpRequestsAndCacheEntries()
 {
 
   // FILL THIS IN
-  std::cout << "periodic check ARP requests and Cache Entries" << std::endl;
+  // std::cout << "periodic check ARP requests and Cache Entries" << std::endl;
 
   /* check ARP requests */
   for (auto iter = m_arpRequests.begin(); iter != m_arpRequests.end();){
     time_point current_time = steady_clock::now();
     std::shared_ptr<simple_router::ArpRequest> request = *iter;
     if(request->nTimesSent == 5){
-      std::cout << "the request was sent to ip "<< request->ip <<" 5 times" << std::endl;
+      fprintf(stderr, "the request target ip address: ");
+      print_addr_ip_int(ntohl(request->ip));
+      std::cout << "send 5 times" << std::endl;
       for (const auto& packet: request->packets){
         m_router.sendIcmpHostUnreachable(packet.packet, packet.iface);
       }
       iter = m_arpRequests.erase(iter);
     }
     else{
-      std::cout << "the request was sent to ip " << request->ip << " " << request->nTimesSent << "times" << std::endl;
+      fprintf(stderr, "the request target ip address: ");
+      print_addr_ip_int(ntohl(request->ip));
+      std::cout << "send " << request->nTimesSent << " times" << std::endl;
       m_router.sendARPRequest(request->ip);
       request->timeSent = current_time;
       request->nTimesSent++;

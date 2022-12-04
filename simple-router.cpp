@@ -35,8 +35,8 @@ SimpleRouter::handleARPRequest(const Buffer& packet, const std::string& inIface)
   }
 
   // generate reply packet
-  Buffer reply(sizeof(packet));
-  
+  Buffer reply(packet);
+
   ethernet_hdr * eth_reply_ptr = (ethernet_hdr *)reply.data();
   memcpy(eth_reply_ptr->ether_shost, iface->addr.data(), ETHER_ADDR_LEN);
   memcpy(eth_reply_ptr->ether_dhost, eth_request_ptr->ether_shost, ETHER_ADDR_LEN);
@@ -178,7 +178,7 @@ SimpleRouter::sendIcmpType3(const Buffer& packet, const std::string& inIface, ui
   reply_icmp_ptr->next_mtu = 0;
   reply_icmp_ptr->unused = 0;
   memcpy(reply_icmp_ptr->data, ip_ptr, ICMP_DATA_SIZE);
-  reply_icmp_ptr->icmp_sum = cksum(reply_icmp_ptr, sizeof(reply_icmp_ptr));
+  reply_icmp_ptr->icmp_sum = cksum(reply_icmp_ptr, sizeof(icmp_t3_hdr));
   
   // fill in ip
   const Interface* outIface = findIfaceByName(inIface);
@@ -186,7 +186,7 @@ SimpleRouter::sendIcmpType3(const Buffer& packet, const std::string& inIface, ui
   memcpy(reply_ip_ptr, ip_ptr, sizeof(ip_hdr));
   reply_ip_ptr->ip_tos = 0;
   reply_ip_ptr->ip_len = htons(sizeof(ip_hdr)+sizeof(icmp_t3_hdr));
-  reply_ip_ptr->ip_id  = 0;
+  reply_ip_ptr->ip_id  = 0;                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
   reply_ip_ptr->ip_ttl = 64;
   reply_ip_ptr->ip_p = ip_protocol_icmp;
   reply_ip_ptr->ip_sum = 0;
@@ -200,6 +200,7 @@ SimpleRouter::sendIcmpType3(const Buffer& packet, const std::string& inIface, ui
   memcpy(reply_eth_ptr->ether_shost, eth_ptr->ether_dhost, ETHER_ADDR_LEN);
   reply_eth_ptr->ether_type = htons(ethertype_ip);
 
+  print_hdrs(reply);
   sendPacket(reply, inIface);
 }
 
@@ -226,7 +227,6 @@ SimpleRouter::sendEchoReply(const Buffer& packet, const std::string& inIface){
   std::cout << "send Echo Reply packet..." << std::endl;
   ethernet_hdr * eth_ptr = (ethernet_hdr *)packet.data();
   ip_hdr * ip_ptr = (ip_hdr *)(packet.data()+sizeof(ethernet_hdr));
-  icmp_hdr * icmp_ptr = (icmp_hdr *)(packet.data()+sizeof(ethernet_hdr)+sizeof(ip_hdr)); 
   
   Buffer reply = packet;
   // modify ethernet frames
@@ -282,14 +282,13 @@ SimpleRouter::ForwardPacket(const Buffer& packet, const std::string& inIface){
   forward_ip_ptr->ip_ttl = forward_ip_ptr->ip_ttl - 1;
   forward_ip_ptr->ip_sum = 0;
   forward_ip_ptr->ip_sum = cksum((uint8_t*)forward_ip_ptr, sizeof(ip_hdr));
-
+  
   sendPacket(forward, outIface->name);
 }
 
 void
 SimpleRouter::handleICMP(const Buffer& packet, const std::string& inIface){
   std::cout << "Handling ICMP packet now..." << std::endl;
-  ip_hdr * ip_ptr = (ip_hdr *)(packet.data() + sizeof(ethernet_hdr));
   icmp_hdr * icmp_ptr = (icmp_hdr *)(packet.data() + sizeof(ethernet_hdr) + sizeof(ip_hdr));
   /* check validation of ICMP packet */
   // check size of packet
@@ -361,7 +360,7 @@ void
 SimpleRouter::handlePacket(const Buffer& packet, const std::string& inIface)
 {
   std::cerr << "Got packet of size " << packet.size() << " on interface " << inIface << std::endl;
-  // print_hdrs(packet);
+  print_hdrs(packet);
 
   const Interface* iface = findIfaceByName(inIface);
   if (iface == nullptr) {
@@ -381,13 +380,13 @@ SimpleRouter::handlePacket(const Buffer& packet, const std::string& inIface)
   }
   // check destination hardware address
   
-  Buffer eth_dhost(eth_hdr -> ether_dhost, eth_hdr -> ether_shost - 1);
+  Buffer eth_dhost(ETHER_ADDR_LEN);
   const Buffer BROADCAST_ADDR {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
-  if (findIfaceByMac(eth_dhost)){
+  if (!memcmp(eth_hdr->ether_dhost, iface->addr.data(), ETHER_ADDR_LEN)){
     std::cout << "the destination address is corresponding to mac address, accepted" << std::endl;
   }
-  else if (eth_dhost == BROADCAST_ADDR){
+  else if (!memcmp(eth_hdr->ether_dhost,BROADCAST_ADDR.data(), ETHER_ADDR_LEN)){
     std::cout << "the destination address is broadcast address, accepted" << std::endl;
   }
   else{

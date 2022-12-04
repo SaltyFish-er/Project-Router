@@ -37,7 +37,7 @@ RoutingTable::lookup(uint32_t ip) const
   const RoutingTableEntry* matched_entry = nullptr;
   uint32_t matched_mask = 0;
   for (const auto &entry : m_entries){
-    if(ip & entry.mask == entry.dest & entry.mask){
+    if((ip & entry.mask) == (entry.dest & entry.mask)){
       if(entry.mask >= matched_mask){
         matched_mask = entry.mask;
         matched_entry = &entry;
@@ -46,7 +46,11 @@ RoutingTable::lookup(uint32_t ip) const
   }
 
   if (matched_entry != nullptr){
-    std::cout << "Routing table found ip: input = "<< ip <<" matched = "<< matched_entry->dest <<std::endl;
+    std::cout << "Routing table found ip: input = ";
+    print_addr_ip_int(ip);
+    std::cout <<" matched = "; 
+    print_addr_ip_int(matched_entry->dest);
+    std::cout << std::endl;
     return *matched_entry;
   }
   else{
