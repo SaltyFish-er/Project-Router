@@ -75,8 +75,6 @@ SimpleRouter::handleARPReply(const Buffer& packet, const std::string& inIface){
     if (arp_request != nullptr){
       std::cout<<"Handle requests in arp_request..."<<std::endl;
       for (auto &req : arp_request->packets){
-        //ethernet_hdr* ether_ptr = (ethernet_hdr *)req.packet.data();
-        //memcpy(ether_ptr->ether_dhost, s_mac.data(), ETHER_ADDR_LEN);
         handlePacket(req.packet, req.iface);
       }
       std::cout<<"Handle requests over!"<<std::endl;
