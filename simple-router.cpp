@@ -337,7 +337,7 @@ SimpleRouter::handleIPv4(const Buffer& packet, const std::string& inIface){
   const Interface* dest_iface = findIfaceByIp(ip_ptr->ip_dst);
   if (dest_iface == nullptr){
     std::cout << "the IPv4 packet is to be forwarded" << std::endl;
-    if (ip_ptr->ip_ttl == 1){
+    if ((ip_ptr->ip_ttl == 1) || (ip_ptr->ip_ttl == 0)){
       sendIcmpTimeExceeded(packet, inIface);
     }
     else{
